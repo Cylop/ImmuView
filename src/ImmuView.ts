@@ -1,61 +1,109 @@
 class DirectMutationError extends Error {}
+class ValidationError extends Error {}
 
+type ErrorHandler = (error: Error) => void;
 
 type ReadonlyState<T> = {
-    value: T;
+    value: Readonly<T>;
     internalSet: (newValue: T) => void;
 };
 
-const createProxy = <T extends object>(initialValue: T): ReadonlyState<T> => {
-    let value = initialValue;
+type Validator<T> = (value: T) => boolean;
 
-    const proxy = new Proxy({} as T, {
-        get: (_, property) => {
-          return value[property as keyof T];
-        },
-        set: (target, property, value) => {
-          throw new DirectMutationError(
-            `This state is read-only. Tried to modify property directly with '${String(target)}.${String(
-              property,
-            )} = ${String(value)}'.
-                    Use the internalSet function to modify the state`,
-          );
-        },
-        ownKeys: () => {
-          return Reflect.ownKeys(value);
-        },
-        has: (_target, key) => {
-          return key in value;
-        },
-        getOwnPropertyDescriptor: (_target, key) => {
-          return Reflect.getOwnPropertyDescriptor(value, key);
-        },
-      });
+interface ReadonlyStateOptions<T> {
+    validator?: Validator<T>;
+    errorHandler?: ErrorHandler;
+    validationErrorMessage?: string;
+}
 
-    const internalSet = (newValue: T) => {
-        value = newValue;
+const defaultErrorHandler = (error: Error) => {
+    console.error(error.message);
+};
+
+const isObject = (value: any): value is object =>
+    typeof value === 'object' && value !== null;
+
+const createInternalSet = <T>(
+    valueRef: { current: T },
+    validator?: Validator<T>,
+    errorHandler: ErrorHandler = defaultErrorHandler,
+    validationErrorMessage?: string
+) => {
+    return (newValue: T) => {
+        if (validator && !validator(newValue)) {
+            errorHandler(
+                new ValidationError(
+                    validationErrorMessage || 'Validation failed.'
+                )
+            );
+            return;
+        }
+        valueRef.current = newValue;
     };
+};
+
+const objectHandler = <T extends object>(valueRef: {
+    current: T;
+}): ProxyHandler<T> => ({
+    get: (_target, property) => {
+        const propValue = valueRef.current[property as keyof T];
+        if (isObject(propValue)) {
+            return new Proxy(propValue, objectHandler({ current: propValue }));
+        }
+        return propValue;
+    },
+    set: (_target, property, _newValue) => {
+        throw new DirectMutationError(
+            `Cannot modify readonly state property '${String(property)}'.`
+        );
+    },
+});
+
+const createProxy = <T extends object>(
+    initialValue: T,
+    options?: ReadonlyStateOptions<T>
+): ReadonlyState<T> => {
+    const valueRef = { current: initialValue };
+    const { validator, errorHandler, validationErrorMessage } = options || {};
+
+    const proxy = new Proxy({} as T, objectHandler(valueRef));
+
+    const internalSet = createInternalSet(
+        valueRef,
+        validator,
+        errorHandler,
+        validationErrorMessage
+    );
 
     return { value: proxy, internalSet };
-}
+};
 
-const createPrimitive = <T>(initialValue: T): ReadonlyState<T> =>  {
-    let value = initialValue;
+const createPrimitive = <T>(
+    initialValue: T,
+    options?: ReadonlyStateOptions<T>
+): ReadonlyState<T> => {
+    const valueRef = { current: initialValue };
+    const { validator, errorHandler, validationErrorMessage } = options || {};
 
-    const getValue = () => value;
-    const internalSet = (newValue: T) => {
-        value = newValue;
-    };
+    const internalSet = createInternalSet(
+        valueRef,
+        validator,
+        errorHandler,
+        validationErrorMessage
+    );
 
-    return { value: getValue(), internalSet };
-}
+    return { value: valueRef.current, internalSet };
+};
 
-const readonly = <T>(initialValue: T): ReadonlyState<T> => {
-    if (typeof initialValue === 'object' && initialValue !== null) {
-        return createProxy(initialValue as any);
+const readonly = <T>(
+    initialValue: T,
+    options?: ReadonlyStateOptions<T>
+): ReadonlyState<T> => {
+    if (isObject(initialValue)) {
+        return createProxy(initialValue as any, options);
     } else {
-        return createPrimitive(initialValue);
+        return createPrimitive(initialValue, options);
     }
-}
+};
 
-export { readonly, DirectMutationError };
+export { readonly, DirectMutationError, ValidationError };
