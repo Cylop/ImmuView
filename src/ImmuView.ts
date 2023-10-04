@@ -86,7 +86,7 @@ const arrayProxyHandler: ProxyHandler<any[]> = {
 const createDeepProxy = <T>(
     target: T,
     options?: ReadonlyStateOptions<T>,
-    proxies: WeakMap<object, any> = new WeakMap()
+    proxies: WeakMap<object, any> = new WeakMap(),
 ): T => {
     let proxyKey = {};
     if (!isObject(target)) {
@@ -137,7 +137,7 @@ const createDeepProxy = <T>(
         getPrototypeOf: () => {
             return isObject(target) ? Reflect.getPrototypeOf(target) : null;
         },
-        apply: (target, _thisArg, _argumentsList) => {
+        apply: (target) => {
             if (typeof target !== 'function') {
                 throw new DirectMutationError('Target is not callable.');
             }
@@ -152,13 +152,13 @@ const createDeepProxy = <T>(
 
 const readonly = <T>(
     initialValue: T,
-    options?: ReadonlyStateOptions<T>
+    options?: ReadonlyStateOptions<T>,
 ): ReadonlyState<T> => {
     let proxy = createDeepProxy(initialValue, options);
     const internalSet = (newValue: T) => {
         if (options?.validator && !options.validator(newValue)) {
             const error = new ValidationError(
-                options.validationErrorMessage ?? 'Validation failed.'
+                options.validationErrorMessage ?? 'Validation failed.',
             );
             if (options?.errorHandler) {
                 options.errorHandler(error);

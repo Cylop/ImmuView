@@ -104,7 +104,7 @@ describe('readonly utility', () => {
         const validationErrorMessage = 'Count exceeds limit';
         const state = readonly(
             { count: 5 },
-            { validator, validationErrorMessage }
+            { validator, validationErrorMessage },
         );
         expect(() => {
             state.internalSet({ count: 15 });
@@ -117,7 +117,7 @@ describe('readonly utility', () => {
         const state = readonly({ count: 5 }, { validator, errorHandler });
         state.internalSet({ count: 15 });
         expect(errorHandler).toBeCalledWith(
-            new ValidationError('Validation failed.')
+            new ValidationError('Validation failed.'),
         );
     });
 });
