@@ -173,4 +173,12 @@ const readonly = <T>(
     return { value: proxy, internalSet };
 };
 
-export { readonly, DirectMutationError, ValidationError };
+export {
+    readonly,
+    DirectMutationError,
+    ValidationError,
+    ErrorHandler,
+    ReadonlyState,
+    Validator,
+    ReadonlyStateOptions,
+};
