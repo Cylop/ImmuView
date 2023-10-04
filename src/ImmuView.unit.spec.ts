@@ -356,3 +356,66 @@ describe('readonly utility extended tests', () => {
 
     // ... continue with other data types and scenarios
 });
+
+describe('ImmuState - Primitives', () => {
+    describe('Number', () => {
+        it('should not allow direct modification of a number', () => {
+            const state = readonly(5);
+            expect(state.value).toBe(5);
+            expect(() => {
+                (state.value as any) = 10;
+            }).toThrow(DirectMutationError);
+        });
+    });
+
+    describe('String', () => {
+        it('should not allow direct modification of a string', () => {
+            const state = readonly('hello');
+            expect(state.value).toBe('hello');
+            expect(() => {
+                (state.value as any) = 'world';
+            }).toThrow(DirectMutationError);
+        });
+    });
+
+    describe('Boolean', () => {
+        it('should not allow direct modification of a boolean', () => {
+            const state = readonly(true);
+            expect(state.value).toBe(true);
+            expect(() => {
+                (state.value as any) = false;
+            }).toThrow(DirectMutationError);
+        });
+    });
+
+    describe('Symbol', () => {
+        it('should not allow direct modification of a symbol', () => {
+            const symbolValue = Symbol('test');
+            const state = readonly(symbolValue);
+            expect(state.value).toBe(symbolValue);
+            expect(() => {
+                (state.value as any) = Symbol('modified');
+            }).toThrow(DirectMutationError);
+        });
+    });
+
+    describe('Null', () => {
+        it('should handle null values correctly', () => {
+            const state = readonly(null);
+            expect(state.value).toBeNull();
+            expect(() => {
+                (state.value as any) = 'not null';
+            }).toThrow(DirectMutationError);
+        });
+    });
+
+    describe('Undefined', () => {
+        it('should handle undefined values correctly', () => {
+            const state = readonly(undefined);
+            expect(state.value).toBeUndefined();
+            expect(() => {
+                (state.value as any) = 'defined';
+            }).toThrow(DirectMutationError);
+        });
+    });
+});
