@@ -1,16 +1,12 @@
-# ImmuState 🛡️ Immutable State Management via Proxy
+# ImmuView 🛡️ Immutable State Management via Proxy
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Tests](https://img.shields.io/badge/tests-100%25-green)
 
-
-
 Elegantly enforce immutability in your JavaScript and TypeScript states.
 
-ImmuState is a lightweight utility designed to provide a readonly view of your JavaScript objects. With ImmuState, you can ensure that your state remains immutable, while still allowing controlled mutations through a dedicated API.
-
-
+ImmuView is a lightweight utility designed to provide a readonly view of your JavaScript objects. With ImmuView, you can ensure that your state remains immutable, while still allowing controlled mutations through a dedicated API.
 
 ---
 
@@ -18,11 +14,11 @@ ImmuState is a lightweight utility designed to provide a readonly view of your J
 
 ### 🚀 Lazy Proxy Initialization
 
-ImmuState doesn't just create a proxy for your object; it does so lazily. This means that nested objects within your state are only proxied when they're accessed, ensuring optimal performance and minimal overhead.
+ImmuView doesn't just create a proxy for your object; it does so lazily. This means that nested objects within your state are only proxied when they're accessed, ensuring optimal performance and minimal overhead.
 
 ### 🌐 Supported Value Types
 
-ImmuState supports a wide range of value types:
+ImmuView supports a wide range of value types:
 
 -   ~~Primitives~~: Numbers, Strings, Booleans - not realy supported, but you can wrap them in an object to make them work.
 -   **Objects**: Plain objects, nested objects
@@ -32,11 +28,11 @@ ImmuState supports a wide range of value types:
 
 ### 🛡️ Custom Validation and Error Handling
 
-Want to validate your state before it's updated? ImmuState provides custom validation hooks. You can also customize the error handling behavior, making it flexible enough to fit into any application architecture.
+Want to validate your state before it's updated? ImmuView provides custom validation hooks. You can also customize the error handling behavior, making it flexible enough to fit into any application architecture.
 
 ### 📦 Seamless Integration
 
-Whether you're working with functional components, class-based components, or just plain JavaScript, ImmuState can be easily integrated. It's framework-agnostic, so you can use it with React, Vue, Angular, or even without a framework!
+Whether you're working with functional components, class-based components, or just plain JavaScript, ImmuView can be easily integrated. It's framework-agnostic, so you can use it with React, Vue, Angular, or even without a framework!
 
 ## 🌟 Features
 
@@ -53,10 +49,10 @@ Whether you're working with functional components, class-based components, or ju
 
 ### Installation
 
-To get started with ImmuState, you first need to install it:
+To get started with ImmuView, you first need to install it:
 
 ```bash
-npm install immustate --save
+npm install immuview --save
 ```
 
 ---
@@ -68,7 +64,7 @@ Here's a quick example to get you started:
 ### 📖 Basic Usage
 
 ```typescript
-import { readonly, DirectMutationError, ValidationError } from 'immustate';
+import { readonly, DirectMutationError, ValidationError } from 'immuview';
 
 const state = readonly({ count: 5, nested: { value: 10 } });
 
@@ -81,10 +77,10 @@ delete (state.value.nested as any).value;
 
 ### 📖 Class-based Usage
 
-For those who prefer a class-based approach, `ImmuState` can be seamlessly integrated into your classes. Here's a quick example:
+For those who prefer a class-based approach, `ImmuView` can be seamlessly integrated into your classes. Here's a quick example:
 
 ```typescript
-import { readonly, DirectMutationError, ValidationError } from 'immustate';
+import { readonly, DirectMutationError, ValidationError } from 'immuview';
 
 class Counter {
     private _state: ReturnType<typeof readonly>;
@@ -124,7 +120,7 @@ counter.reset();
 console.log(counter.state.count); // Outputs: 0
 ```
 
-In the example above, the Counter class encapsulates the ImmuState logic, allowing internal mutations via methods like increment and reset, while ensuring that external direct mutations throw errors.
+In the example above, the Counter class encapsulates the ImmuView logic, allowing internal mutations via methods like increment and reset, while ensuring that external direct mutations throw errors.
 
 ---
 
@@ -187,4 +183,4 @@ We welcome contributions! Please see our [contributing guidelines](CONTRIBUTING.
 
 ## 🙏 Acknowledgements
 
-Thanks to all contributors and users for making ImmuState a reality!
+Thanks to all contributors and users for making ImmuView a reality!
