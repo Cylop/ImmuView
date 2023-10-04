@@ -10,7 +10,7 @@
         "build": "tsc",
         "test": "jest",
         "coverage": "jest --coverage",
-        "typedoc": "typedoc --options typedoc.json"
+        "typedoc": "typedoc"
     },
     "keywords": [],
     "author": "Nicholas Petrasek",
