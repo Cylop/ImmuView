@@ -48,7 +48,9 @@ const isObject = (value: any): value is object =>
 
 const deepMerge = (target: any, source: any) => {
     for (const key in source) {
-        if (isObject(source[key])) {
+        if (Array.isArray(source[key])) {
+            target[key] = [...source[key]];
+        } else if (isObject(source[key])) {
             if (!target[key]) target[key] = {};
             deepMerge(target[key], source[key]);
         } else {
@@ -62,11 +64,16 @@ const throwError = () => {
 };
 
 const dateProxyHandler: ProxyHandler<Date> = {
-    get: (dateObj, dateProp) => {
+    get: (dateObj, dateProp, receiver) => {
         if (DATE_MUTATING_METHODS.includes(String(dateProp))) {
             return throwError;
         }
-        return dateObj[dateProp as keyof Date];
+        // need to bind the function to the date object to avoid errors when calling it from the proxy
+        const value = Reflect.get(dateObj, dateProp, receiver);
+        if (typeof value === 'function') {
+            return value.bind(dateObj);
+        }
+        return value;
     },
 };
 
@@ -83,23 +90,13 @@ const arrayProxyHandler: ProxyHandler<any[]> = {
     },
 };
 
-const createDeepProxy = <T>(
+const createHandler = <T>(
     target: T,
-    options?: ReadonlyStateOptions<T>,
-    proxies: WeakMap<object, any> = new WeakMap(),
-): T => {
-    let proxyKey = {};
-    if (!isObject(target)) {
-        proxyKey = { value: target };
-    } else {
-        proxyKey = target;
-    }
-
-    if (proxies.has(proxyKey)) {
-        return proxies.get(proxyKey);
-    }
-
-    const handler: ProxyHandler<T & { [key: string]: any }> = {
+    proxies: WeakMap<object, any>,
+    options?: ReadonlyStateOptions<T> | undefined,
+): ProxyHandler<T & { [key: string]: any }> => {
+    Object.preventExtensions(target);
+    return {
         get: (obj, prop: string | symbol) => {
             const value = obj[prop as keyof T];
             if ((value as any) instanceof Date) {
@@ -121,7 +118,6 @@ const createDeepProxy = <T>(
         defineProperty: throwError,
         setPrototypeOf: throwError,
         preventExtensions: throwError,
-        // ... (rest of the traps)
         ownKeys: (obj) => {
             return Reflect.ownKeys(obj);
         },
@@ -131,19 +127,39 @@ const createDeepProxy = <T>(
         getOwnPropertyDescriptor: (target, key) => {
             return Reflect.getOwnPropertyDescriptor(target, key);
         },
-        isExtensible: () => {
-            return false;
+        isExtensible: (target) => {
+            return Object.isExtensible(target);
         },
-        getPrototypeOf: () => {
-            return isObject(target) ? Reflect.getPrototypeOf(target) : null;
+        getPrototypeOf: (target) => {
+            return Reflect.getPrototypeOf(target);
         },
-        apply: (target) => {
-            if (typeof target !== 'function') {
-                throw new DirectMutationError('Target is not callable.');
-            }
+        apply: () => {
             throw new DirectMutationError('Cannot modify readonly state.');
         },
     };
+};
+
+const createDeepProxy = <T>(
+    target: T,
+    options?: ReadonlyStateOptions<T>,
+    proxies: WeakMap<object, any> = new WeakMap(),
+): T => {
+    let proxyKey = {};
+    if (!isObject(target)) {
+        proxyKey = { value: target };
+    } else {
+        proxyKey = target;
+    }
+
+    if (proxies.has(proxyKey)) {
+        return proxies.get(proxyKey);
+    }
+
+    const handler: ProxyHandler<T & { [key: string]: any }> = createHandler<T>(
+        target,
+        proxies,
+        options,
+    );
 
     const proxy = new Proxy(proxyKey, handler);
     proxies.set(proxyKey, proxy);
@@ -181,4 +197,10 @@ export {
     ReadonlyState,
     Validator,
     ReadonlyStateOptions,
+    arrayProxyHandler,
+    dateProxyHandler,
+    createHandler,
+    createDeepProxy,
+    isObject,
+    deepMerge,
 };
