@@ -1,6 +1,6 @@
 # ImmuView 🛡️ Immutable State Management via Proxy
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.3-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Tests](https://img.shields.io/badge/tests-100%25-green)
 
